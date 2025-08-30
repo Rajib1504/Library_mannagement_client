@@ -39,7 +39,7 @@ const All_Books = () => {
           <TableHead className="text-right">ISBN</TableHead>
           <TableHead className="text-right">Copies </TableHead>
           <TableHead className="text-right">Availability </TableHead>
-          <TableHead className="text-right">Actions </TableHead>
+          <TableHead className="text-center">Actions </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -51,9 +51,10 @@ const All_Books = () => {
             <TableCell className="text-right">{book.isbn}</TableCell>
             <TableCell className="text-right">{book.copies}</TableCell>
             <TableCell className="text-right">{book.available ? "Available" : "Not Available"}</TableCell>
-            <TableCell className="text-right">
-              <Button variant="outline">Edit</Button>
-              <Button variant="destructive">Delete</Button>
+            <TableCell className="text-center ">
+              <Button variant="outline" className="mr-2">Edit</Button>
+              <Button variant="destructive" className="mr-2">Delete</Button>
+              <Button variant="default">Borrow</Button>
             </TableCell>
           </TableRow>
         ))}
