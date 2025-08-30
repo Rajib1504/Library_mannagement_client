@@ -1,11 +1,10 @@
 
-
 const Add_Book = () => {
-      return (
-            <div>
-                  Add Book
-            </div>
-      );
+  return (
+    <div>
+      add books
+    </div>
+  );
 };
 
 export default Add_Book;

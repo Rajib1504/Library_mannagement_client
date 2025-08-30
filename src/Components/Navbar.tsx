@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { cn } from "@/lib/utils";
+import { ModeToggle } from "./ModeToggle";
 
 const Navbar = () => {
   return (
@@ -34,6 +35,7 @@ const Navbar = () => {
             >
               Borrow Summary
             </Link>
+            <ModeToggle/>
           </nav>
         </div>
       </div>
