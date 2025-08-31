@@ -9,8 +9,8 @@ import {
   DialogTrigger,
 } from "@/Components/ui/dialog";
 import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
 import { useGetSingleBookQuery, useUpdateBookMutation } from "@/redux/api/baseApi";
+import { Label } from "@/components/ui/label";
 
 
 interface EditBookProps {

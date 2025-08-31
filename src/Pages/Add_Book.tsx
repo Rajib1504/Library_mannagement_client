@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -47,7 +48,7 @@ const bookFormSchema = z.object({
   genre: z.string().min(1, "Please select a genre"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   copies: z.coerce
-    .number({ invalid_type_error: "Copies must be a number" })
+    .number("Copies must be a number" )
     .min(0, "Copies cannot be negative"),
 });
 
@@ -58,7 +59,7 @@ const Add_Book = () => {
   const navigate = useNavigate();
 
   const form = useForm<BookFormValues>({
-    resolver: zodResolver(bookFormSchema),
+    resolver: zodResolver(bookFormSchema) as any,
     defaultValues: {
       title: "",
       author: "",

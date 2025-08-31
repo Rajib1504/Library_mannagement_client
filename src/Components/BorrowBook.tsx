@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { type FormEvent, useState } from "react";
 import { Button } from "@/Components/ui/button";
 import {
@@ -9,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/Components/ui/dialog";
 import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
+import { Label } from "@/components/ui/label";
 import { useBorrowBookMutation } from "@/redux/api/baseApi";
 import { useNavigate } from "react-router";
 
