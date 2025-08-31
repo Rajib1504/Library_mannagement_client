@@ -11,6 +11,8 @@ import {
 } from "@/Components/ui/table";
 import { Button } from "@/Components/ui/button";
 import { EditBook } from "@/Components/EditBook";
+import { BorrowBook } from "@/Components/BorrowBook";
+import { ViewBook } from "@/Components/ViewBook";
 
 type IBook = {
   _id: string;
@@ -29,8 +31,14 @@ const All_Books = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const booksPerPage = 10;
 
-  if (isLoading) return <div className="text-center py-10">Loading books...</div>;
-  if (isError) return <div className="text-center py-10 text-red-500">Failed to fetch books.</div>;
+  if (isLoading)
+    return <div className="text-center py-10">Loading books...</div>;
+  if (isError)
+    return (
+      <div className="text-center py-10 text-red-500">
+        Failed to fetch books.
+      </div>
+    );
 
   const allBooks = data?.data || [];
 
@@ -92,14 +100,21 @@ const All_Books = () => {
                   {book.available ? "Available" : "Not Available"}
                 </TableCell>
                 <TableCell className="text-right flex justify-end gap-2">
-                <EditBook bookId={book._id} />
+                <ViewBook book={book} />
+                  <EditBook bookId={book._id} />
                   <Button
                     variant="destructive"
                     onClick={() => handleDelete(book._id)}
                   >
                     Delete
                   </Button>
-                  <Button variant="default">Borrow</Button>
+                  <Button variant="default">
+                    <BorrowBook
+                      bookTitle={book.title}
+                      bookId={book._id}
+                      availableCopies={book.copies}
+                    />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))
@@ -112,7 +127,7 @@ const All_Books = () => {
           )}
         </TableBody>
       </Table>
-      
+
       {totalPages > 1 && (
         <div className="flex items-center justify-center space-x-4 mt-8">
           <Button

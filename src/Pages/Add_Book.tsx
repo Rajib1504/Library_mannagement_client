@@ -1,141 +1,207 @@
-import { useState } from "react";
-import { useGetbooksQuery } from "@/redux/api/baseApi";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/Components/ui/table";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/Components/ui/button";
-// import { EditBook } from "@/Components/EditBook";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/Components/ui/form";
+import { Input } from "@/Components/ui/input";
+import { Textarea } from "@/Components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/Components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/Components/ui/select";
+import { useCreateBookMutation } from "@/redux/api/baseApi";
+import { useNavigate } from "react-router";
 
-type IBook = {
-  _id: string;
-  title: string;
-  author: string;
-  genre: string;
-  isbn: string;
-  copies: number;
-  available: boolean;
-};
 
-const All_Books = () => {
-  const { data, isLoading, isError } = useGetbooksQuery(undefined);
-  // const [deleteBook] = useDeleteBookMutation();
+const bookFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .min(2, "Title must be at least 2 characters"),
+  author: z
+    .string()
+    .min(1, "Author is required")
+    .min(2, "Author must be at least 2 characters"),
+  isbn: z
+    .string()
+    .min(10, "ISBN must be at least 10 characters")
+    .max(13, "ISBN must be at most 13 characters"),
+  genre: z.string().min(1, "Please select a genre"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  copies: z.coerce
+    .number({ invalid_type_error: "Copies must be a number" })
+    .min(0, "Copies cannot be negative"),
+});
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const booksPerPage = 10;
+type BookFormValues = z.infer<typeof bookFormSchema>;
 
-  if (isLoading) return <div className="text-center py-10">Loading books...</div>;
-  if (isError) return <div className="text-center py-10 text-red-500">Failed to fetch books.</div>;
+const Add_Book = () => {
+  const [createBook, { isLoading }] = useCreateBookMutation();
+  const navigate = useNavigate();
 
-  const allBooks = data?.data || [];
+  const form = useForm<BookFormValues>({
+    resolver: zodResolver(bookFormSchema),
+    defaultValues: {
+      title: "",
+      author: "",
+      isbn: "",
+      genre: "",
+      description: "",
+      copies: 0,
+    },
+  });
 
-  const indexOfLastBook = currentPage * booksPerPage;
-  const indexOfFirstBook = indexOfLastBook - booksPerPage;
-  const currentBooks = allBooks.slice(indexOfFirstBook, indexOfLastBook);
-
-  const totalPages = Math.ceil(allBooks.length / booksPerPage);
-
-  // const handleDelete = async (bookId: string) => {
-  //   if (window.confirm("Are you sure you want to delete this book?")) {
-  //     try {
-  //       await deleteBook(bookId).unwrap();
-  //       alert("Book deleted successfully!");
-  //     } catch (error) {
-  //       console.error("Failed to delete the book:", error);
-  //       alert("Failed to delete the book.");
-  //     }
-  //   }
-  // };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+  const onSubmit = async (data: BookFormValues) => {
+    try {
+      const bookData = { ...data, available: data.copies > 0 };
+      await createBook(bookData).unwrap();
+      
+      alert("Book added successfully!");
+      form.reset();
+      navigate("/all-books");
+    } catch (error) {
+      console.error("Error adding book:", error);
+      alert("Failed to add book. Please try again.");
     }
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <Table>
-        <TableCaption>A list of all books in the library.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Book Title</TableHead>
-            <TableHead>Author</TableHead>
-            <TableHead className="text-right">Genre</TableHead>
-            <TableHead className="text-right">ISBN</TableHead>
-            <TableHead className="text-right">Copies</TableHead>
-            <TableHead className="text-right">Availability</TableHead>
-            <TableHead className="text-center">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {currentBooks.length > 0 ? (
-            currentBooks.map((book: IBook) => (
-              <TableRow key={book._id}>
-                <TableCell className="font-medium">{book.title}</TableCell>
-                <TableCell>{book.author}</TableCell>
-                <TableCell className="text-right">{book.genre}</TableCell>
-                <TableCell className="text-right">{book.isbn}</TableCell>
-                <TableCell className="text-right">{book.copies}</TableCell>
-                <TableCell className="text-right">
-                  {book.available ? "Available" : "Not Available"}
-                </TableCell>
-                <TableCell className="text-right flex justify-end gap-2">
-                  {/* <EditBook bookId={book._id} /> */}
-                  <Button
-                    variant="destructive"
-                    // onClick={() => handleDelete(book._id)}
-                  >
-                    Delete
-                  </Button>
-                  <Button variant="default">Borrow</Button>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center h-24">
-                No books found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-4 mt-8">
-          <Button
-            variant="outline"
-            onClick={handlePreviousPage}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </Button>
-          <span className="text-sm font-medium">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </Button>
-        </div>
-      )}
+    <div className="container mx-auto py-8 px-4">
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Add New Book</CardTitle>
+          <CardDescription>
+            Fill in the details below to add a new book to the library.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Book Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter book title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="author"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Author</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter author name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="isbn"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ISBN</FormLabel>
+                    <FormControl>
+                      <Input type="text" placeholder="Enter ISBN number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                  control={form.control}
+                  name="genre"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Genre</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a genre" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="FICTION">Fiction</SelectItem>
+                          <SelectItem value="NON_FICTION">Non-Fiction</SelectItem>
+                          <SelectItem value="SCIENCE">Science</SelectItem>
+                          <SelectItem value="HISTORY">History</SelectItem>
+                          <SelectItem value="BIOGRAPHY">Biography</SelectItem>
+                          <SelectItem value="FANTASY">Fantasy</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              <FormField
+                control={form.control}
+                name="copies"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of Copies</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0" type="number" min="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter book description..." className="min-h-[100px]" {...field} />
+                    </FormControl>
+                    <FormDescription>Provide a brief description of the book.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-4 pt-4">
+                <Button type="submit" className="flex-1" disabled={isLoading}>
+                  {isLoading ? "Adding Book..." : "Add Book"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => form.reset()} disabled={isLoading}>
+                  Reset Form
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
-export default All_Books;
+export default Add_Book;
